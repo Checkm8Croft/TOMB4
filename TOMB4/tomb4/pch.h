@@ -1,31 +1,45 @@
-// pch.h: This is a precompiled header file.
-// Files listed below are compiled only once, improving build performance for future builds.
-// This also affects IntelliSense performance, including code completion and many code browsing features.
-// However, files listed here are ALL re-compiled if any one of them is updated between builds.
-// Do not add files here that you will be updating frequently as this negates the performance advantage.
-
 #ifndef PCH_H
 #define PCH_H
 
-// add headers that you want to pre-compile here
-#define DIRECTINPUT_VERSION 0x0800
-#define DIRECTSOUND_VERSION	0x0800
-#define XAUDIO2_HELPER_FUNCTIONS
-#define _USE_MATH_DEFINES
-#include <windows.h>
-#include <windowsx.h>
-#include <d3d.h>
-#include <d3dtypes.h>
+// Standard C/C++ headers
+#include <cstdint>
+#include <cstdio>
 #include <cmath>
-#include <stdio.h>
-#include <process.h>
-#include <dinput.h>
-#include <dsound.h>
-#include <xaudio2.h>
-#include <xaudio2fx.h>
-#include <mmreg.h>
-#include <MSAcm.h>
+#include <ctime>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include <vector>
+#include <memory>
+#include <iostream>
 
-#include "../../resource.h"
+// Macros utili per compatibilità
+#define _USE_MATH_DEFINES
 
+// Stub per DirectX/Windows types
+typedef int HRESULT;
+typedef unsigned long DWORD;
+typedef unsigned short WORD;
+typedef unsigned char BYTE;
+typedef int BOOL;
+typedef void* LPDIRECT3DDEVICE;
+typedef void* LPDIRECTDRAW;
+typedef void* LPDIRECTINPUTDEVICE;
+typedef void* LPDIRECTSOUND;
+typedef float D3DVALUE;
+
+#ifndef SUCCEEDED
+#define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
+#endif
+
+#ifndef FAILED
+#define FAILED(hr) (((HRESULT)(hr)) < 0)
+#endif
+
+// Stub structures Direct3D minimi
+struct D3DVECTOR { float x, y, z; };
+struct D3DMATRIX { float _11,_12,_13,_14; float _21,_22,_23,_24; float _31,_32,_33,_34; float _41,_42,_43,_44; };
+
+// Stub per audio/macOS/Linux (da sostituire con SDL2/ALSA/OpenAL)
+struct DSOUND_BUFFER {};
 #endif //PCH_H

@@ -1,6 +1,13 @@
 #pragma once
 #include "math_tbls.h"
-
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+#include <SDL2/SDL.h>
 #pragma pack(push, 1)
 
 /*math*/
@@ -998,7 +1005,8 @@ struct PCLIGHT_INFO
 	uchar Type;
 	uchar Pad;
 };
-
+typedef struct { float x, y, z; } Vec3;
+Vec3* vnormals;
 struct ROOM_INFO
 {
 	short* data;
@@ -1035,17 +1043,17 @@ struct ROOM_INFO
 	long nVerts;
 	long nWaterVerts;
 	long nShoreVerts;
-	LPDIRECT3DVERTEXBUFFER SourceVB;
+	GLuint SourceVB;
 	short* FaceData;
 	float posx;
 	float posy;
 	float posz;
-	D3DVECTOR* vnormals;
-	D3DVECTOR* fnormals;
+	Vec3* vnormals;
+	Vec3* fnormals;
 	long* prelight;
 	long* prelightwater;
 	long watercalc;
-	D3DVECTOR* verts;
+	Vec3* verts;
 	long gt3cnt;
 	long gt4cnt;
 	PCLIGHT_INFO* pclight;
@@ -1199,34 +1207,44 @@ struct STATIC_INFO
 	short z_minc;
 	short z_maxc;
 };
-
+typedef struct {} Surface;
+struct D3DInterface {};
+D3DInterface* lpD3D;
+struct Viewport { int x, y, width, height; };
+Viewport lpViewport;
+struct InputDevice {};
+InputDevice* lpInputDevice;
+typedef struct {} HInstance; // stub
+typedef struct {} HWindow;   // stub
+typedef struct {} WndClass;  // stub
 struct DXPTR
 {
-	LPDIRECTDRAWX lpDD;
-	LPDIRECT3DX lpD3D;
-	LPDIRECT3DDEVICEX lpD3DDevice;
-	LPDIRECT3DDEVICEX _lpD3DDevice;
-	LPDIRECTDRAWSURFACEX lpPrimaryBuffer;
-	LPDIRECTDRAWSURFACEX lpBackBuffer;
-	LPDIRECTDRAWSURFACEX lpZBuffer;
-	LPDIRECT3DVIEWPORTX lpViewport;
-	LPDIRECTSOUND8 lpDS;
-	IXAudio2* lpXA;
+	Surface lpDD;
+	D3DInterface* lpD3D;
+	GLuint lpD3DDevice;
+	GLuint _lpD3DDevice;
+	SDL_Texture* lpPrimaryBuffer;
+	SDL_Texture* lpBackBuffer;
+	GLuint lpZBuffer;
+	Viewport lpViewport;
+	SDL_AudioDeviceID lpDS;
+	SDL_AudioDeviceID* lpXA;
 	ulong dwRenderWidth;
 	ulong dwRenderHeight;
-	RECT rViewport;
-	RECT rScreen;
+	SDL_Rect rViewport;
+	SDL_Rect rScreen;
 	long Flags;
 	ulong WindowStyle;
 	long CoopLevel;
-	LPDIRECTINPUTX lpDirectInput;
-	LPDIRECTINPUTDEVICEX Keyboard;
-	HWND hWnd;
+	InputDevice* lpDirectInput;
+	InputDevice* Keyboard;
+	HWindow hWnd;
 	volatile long InScene;
 	volatile long WaitAtBeginScene;
 	volatile long DoneBlit;
 };
-
+struct SurfaceDesc { int width; int height; int format; };
+SurfaceDesc ddsd;
 struct DXDISPLAYMODE
 {
 	long w;
@@ -1234,7 +1252,7 @@ struct DXDISPLAYMODE
 	long bpp;
 	long RefreshRate;
 	long bPalette;
-	DDSURFACEDESCX ddsd;
+	SurfaceDesc ddsd;
 	uchar rbpp;
 	uchar gbpp;
 	uchar bbpp;
@@ -1245,7 +1263,7 @@ struct DXDISPLAYMODE
 
 struct DXTEXTUREINFO
 {
-	DDPIXELFORMAT ddpf;
+	SDL_PixelFormat* ddpf;
 	ulong bpp;
 	long bPalette;
 	long bAlpha;
@@ -1261,17 +1279,21 @@ struct DXTEXTUREINFO
 
 struct DXZBUFFERINFO
 {
-	DDPIXELFORMAT ddpf;
+	SDL_PixelFormat* ddpf;
 	ulong bpp;
 };
-
+struct GUID { unsigned int Data1, Data2, Data3, Data4[8]; };
+GUID Guid;
+GUID* lpGuid;
+typedef struct { int maxTextureWidth, maxTextureHeight; int maxLights; } DeviceDesc;
+DeviceDesc;
 struct DXD3DDEVICE
 {
 	char Name[30];
 	char About[80];
-	LPGUID lpGuid;
+	GUID* lpGuid;
 	GUID Guid;
-	D3DDEVICEDESC DeviceDesc;
+	DeviceDesc DeviceDesc;
 	long bHardware;
 	long nDisplayModes;
 	DXDISPLAYMODE* DisplayModes;
@@ -1280,15 +1302,18 @@ struct DXD3DDEVICE
 	long nZBufferInfos;
 	DXZBUFFERINFO* ZBufferInfos;
 };
-
+typedef struct { int caps; int minWidth, minHeight; int maxWidth, maxHeight; } DDCaps;
+DDCaps;
+typedef struct { char driverName[256]; char description[256]; unsigned int vendorId; } DDDeviceIdentifier;
+DDDeviceIdentifier DDIdentifier;
 struct DXDIRECTDRAWINFO
 {
 	char Name[30];
 	char About[80];
-	LPGUID lpGuid;
+	GUID* lpGuid;
 	GUID Guid;
-	DDCAPS DDCaps;
-	DDDEVICEIDENTIFIER DDIdentifier;
+	DDCaps DDCaps;
+	DDDeviceIdentifier DDIdentifier;
 	long nDisplayModes;
 	DXDISPLAYMODE* DisplayModes;
 	long nD3DDevices;
@@ -1299,7 +1324,7 @@ struct DXDIRECTSOUNDINFO
 {
 	char Name[30];
 	char About[80];
-	LPGUID lpGuid;
+	GUID* lpGuid;
 	GUID Guid;
 };
 
@@ -1317,19 +1342,24 @@ struct DXINFO
 	long nDS;
 	bool bHardware;
 };
-
+typedef struct {} D3DMaterial;
+D3DMaterial* GlobalMaterial;
+typedef unsigned int D3DMaterialHandle;
+D3DMaterialHandle GlobalMaterialHandle;
+typedef struct {} HAccel;
+HAccel hAccel;
 struct WINAPP
 {
-	HINSTANCE hInstance;
-	HWND hWnd;
-	WNDCLASS WindowClass;
+	HInstance hInstance;
+	HWindow hWnd;
+	WndClass WindowClass;
 	DXINFO DXInfo;
 	DXPTR dx;
-	HANDLE mutex;
+	pthread_mutex_t mutex;
 	float fps;
-	LPDIRECT3DMATERIALX GlobalMaterial;
-	D3DMATERIALHANDLE GlobalMaterialHandle;
-	HACCEL hAccel;
+	D3DMaterial* GlobalMaterial;
+	D3DMaterialHandle GlobalMaterialHandle;
+	HAccel hAccel;
 	bool SetupComplete;
 	bool BumpMapping;
 	long TextureSize;
@@ -1370,8 +1400,8 @@ struct MESH_DATA
 	short ngt3;
 	short* gt3;
 	long* prelight;
-	LPDIRECT3DVERTEXBUFFER SourceVB;
-	D3DVECTOR* Normals;
+	GLuint SourceVB;
+	Vec3* Normals;
 };
 
 struct TEXTURESTRUCT
@@ -1609,6 +1639,18 @@ struct BITE_INFO
 	long z;
 	long mesh_num;
 };
+typedef float D3DVALUE;
+typedef struct { float r,g,b,a; } Color;
+Color D3DCOLOR;
+// D3DVALUE / D3DCOLOR (C puro)
+typedef float D3DVALUE;
+
+typedef struct {
+    D3DVALUE r;
+    D3DVALUE g;
+    D3DVALUE b;
+    D3DVALUE a;
+} D3DCOLOR;
 
 struct D3DTLBUMPVERTEX
 {
@@ -1626,8 +1668,8 @@ struct D3DTLBUMPVERTEX
 
 struct TEXTURE
 {
-	LPDIRECT3DTEXTUREX tex;
-	LPDIRECTDRAWSURFACEX surface;
+	GLuint tex;
+	GLuint surface;
 	ulong xoff;
 	ulong yoff;
 	ulong width;
@@ -1822,8 +1864,8 @@ struct SMOKE_SPARKS
 
 struct MONOSCREEN_STRUCT
 {
-	LPDIRECT3DTEXTUREX tex;
-	LPDIRECTDRAWSURFACEX surface;
+	GLuint tex;
+	GLuint surface;
 };
 
 struct VonCroyCutData
@@ -1975,7 +2017,7 @@ struct SAMPLE_INFO
 
 struct DS_SAMPLE
 {
-	LPDIRECTSOUNDBUFFER buffer;
+	SDL_AudioDeviceID buffer;
 	long frequency;
 	long playing;
 };
